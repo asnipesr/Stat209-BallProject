@@ -1,0 +1,87 @@
+---
+title: "Basketball Stats Project"
+author: "Asaan Snipes-Rea"
+date: "2024-04-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mosaicModel)
+library(tidymodels)
+library(tidyverse)
+Stats9_10 <- read.csv("9-10stats.csv")
+Stats10_11 <- read.csv("10-11stats.csv")
+Salaries9_10 <- read.csv("9-10salaries.csv")
+Salaries10_11 <- read.csv("10-11salaries.csv")
+
+Stats21_22 <- read.csv("21-22stats.csv")
+Salaries21_22 <- read.csv("salary2022.csv")
+Stats22_23 <- read.csv("22-23stats.csv")
+Salaries22_23 <- read.csv("Salary2023.csv")
+```
+
+### Remove players with multiple teams in season. Only keep total stats
+
+```{r echo = FALSE}
+Stats9_10_2 <- Stats9_10[Stats9_10$Tm == "TOT" | !duplicated(Stats9_10$Player),]
+Stats10_11_2 <- Stats10_11[Stats10_11$Tm == "TOT" | !duplicated(Stats10_11$Player),]
+
+Stats9_10_2 <- Stats9_10_2 |> mutate(Year = "2010") |> rename(FGpct = "FG.") |> rename(X3Ppct = "X3P.") |> rename(X2Ppct = "X2P.") |> rename(eFGpct = "eFG.") |> rename(FTpct = "FT.")
+Stats10_11_2 <- Stats10_11_2 |> mutate(Year = "2011") |> rename(FGpct = "FG.") |> rename(X3Ppct = "X3P.") |> rename(X2Ppct = "X2P.") |> rename(eFGpct = "eFG.") |> rename(FTpct = "FT.")
+
+Stats9_10_2 <- Stats9_10_2[, !(names(Stats9_10_2) %in% c("Rk", "Player.additional"))]
+Stats10_11_2 <- Stats10_11_2[, !(names(Stats10_11_2) %in% c("Rk", "Player.additional"))]
+
+Stats9_11 <- full_join(Stats9_10_2, Stats10_11_2)
+    
+Salaries9_10 <- subset(Salaries9_10, select = c(PLAYER.1, X2009.10, X2009.10...))
+Salaries10_11 <- subset(Salaries10_11, select = c(PLAYER.1, X2010.11, X2010.11...))
+
+Salaries9_10 <- Salaries9_10 |> rename(Player = "PLAYER.1") |> rename(Salary = "X2009.10") |> rename(Inflated = "X2009.10...")
+Salaries10_11 <- Salaries10_11 |> rename(Player = "PLAYER.1") |> rename(Salary = "X2010.11") |> rename(Inflated = "X2010.11...")
+
+Salaries9_11 <- full_join(Salaries9_10, Salaries10_11, by = "Player")
+
+Season10 <- left_join(Stats9_10_2, Salaries9_10)
+Season11 <- left_join(Stats10_11_2,Salaries10_11)
+
+Season10_11 <- full_join(Season10, Season11)
+
+```
+
+## Same for 2021-22 2022-23
+
+```{r echo = FALSE}
+Stats21_22_2 <- Stats21_22[Stats21_22$Tm == "TOT" | !duplicated(Stats21_22$Player),]
+Stats22_23_2 <- Stats22_23[Stats22_23$Tm == "TOT" | !duplicated(Stats22_23$Player),]
+
+Stats21_22_2 <- Stats21_22_2 |> mutate(Year = "2022") |> rename(FGpct = "FG.") |> rename(X3Ppct = "X3P.") |> rename(X2Ppct = "X2P.") |> rename(eFGpct = "eFG.") |> rename(FTpct = "FT.")
+Stats22_23_2 <- Stats22_23_2 |> mutate(Year = "2023") |> rename(FGpct = "FG.") |> rename(X3Ppct = "X3P.") |> rename(X2Ppct = "X2P.") |> rename(eFGpct = "eFG.") |> rename(FTpct = "FT.")
+
+Salaries21_22$Player <- trimws(Salaries21_22$Player, "right")
+Salaries22_23$Player <- trimws(Salaries22_23$Player, "right")
+
+Stats21_22_2 <- Stats21_22_2[, !(names(Stats21_22_2) %in% c("Rk", "Player.additional"))] 
+Stats22_23_2 <- Stats22_23_2[, !(names(Stats22_23_2) %in% c("Rk", "Player.additional"))]
+
+Salaries21_22 <- Salaries21_22 |> rename(Salary = "Salary2022", Inflated = "Inflated2022")
+Salaries22_23 <- Salaries22_23 |> rename(Salary = "Salary2023", Inflated = "Inflated2023")
+
+Season22 <- left_join(Stats21_22_2, Salaries21_22)
+Season23 <- left_join(Stats22_23_2, Salaries22_23)
+
+head(Season22,3)
+head(Season23,3)
+
+```
+
+## Big Sets
+
+```{r}
+Season22_23 <- full_join(Season22, Season23)
+head(Season22_23, 3)
+head(Season10_11,3)
+
+#print(Season10_11[is.na(Season10_11$Salary), "Player"])
+```
